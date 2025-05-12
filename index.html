@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NyayaGPT - Modern Legal AI Assistant</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+</head>
+<body>
+    <div class="app-wrapper">
+        <!-- Left Navigation Panel -->
+        <nav class="nav-panel">
+            <div class="brand">
+                <div class="logo-wrapper">
+                    <img src="logo.svg" alt="NyayaGPT Logo" class="logo">
+                </div>
+                <h1>NyayaGPT</h1>
+            </div>
+            
+            <button class="new-chat-button">
+                <span class="button-icon"><i class="fas fa-plus"></i></span>
+                <span>New Conversation</span>
+            </button>
+            
+            <div class="nav-section">
+                <div class="section-header">
+                    <span class="section-icon"><i class="fas fa-history"></i></span>
+                    <h3>Recent Conversations</h3>
+                </div>
+                <div class="conversations-list" id="conversations-list">
+                    <!-- Conversations will be populated here via JavaScript -->
+                    <div class="empty-list-message">
+                        <i class="fas fa-comments"></i>
+                        <p>Your conversations will appear here</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="nav-section">
+                <div class="section-header">
+                    <span class="section-icon"><i class="fas fa-sliders-h"></i></span>
+                    <h3>Settings</h3>
+                </div>
+                
+                <div class="models-section">
+                    <label class="settings-label">AI Model</label>
+                    <div class="model-options">
+                        <label class="model-card">
+                            <input type="radio" name="model" value="gpt-4o" checked>
+                            <div class="card-content">
+                                <div class="model-header">
+                                    <span class="model-name">GPT-4o</span>
+                                    <span class="model-badge">Advanced</span>
+                                </div>
+                                <p class="model-description">Most comprehensive legal reasoning</p>
+                            </div>
+                        </label>
+                        
+                        <label class="model-card">
+                            <input type="radio" name="model" value="gpt-4o-mini">
+                            <div class="card-content">
+                                <div class="model-header">
+                                    <span class="model-name">GPT-4o Mini</span>
+                                    <span class="model-badge">Balanced</span>
+                                </div>
+                                <p class="model-description">Good balance of speed & accuracy</p>
+                            </div>
+                        </label>
+                        
+                        <label class="model-card">
+                            <input type="radio" name="model" value="gpt-3.5-turbo">
+                            <div class="card-content">
+                                <div class="model-header">
+                                    <span class="model-name">GPT-3.5 Turbo</span>
+                                    <span class="model-badge">Fast</span>
+                                </div>
+                                <p class="model-description">Quickest responses for simpler tasks</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="settings-control">
+                    <label class="settings-label" for="strategy">Retrieval Strategy</label>
+                    <div class="custom-select">
+                        <select id="strategy">
+                            <option value="simple">Simple (Faster)</option>
+                            <option value="fusion">Fusion (More Comprehensive)</option>
+                        </select>
+                        <span class="select-arrow"><i class="fas fa-chevron-down"></i></span>
+                    </div>
+                </div>
+                
+                <div class="settings-control">
+                    <div class="settings-header">
+                        <label class="settings-label" for="temperature">Temperature</label>
+                        <span class="settings-value" id="temperature-value">0.1</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" id="temperature" min="0" max="1" step="0.1" value="0.1">
+                        <div class="slider-labels">
+                            <span>Precise</span>
+                            <span>Creative</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="settings-control">
+                    <div class="settings-header">
+                        <label class="settings-label" for="max-tokens">Response Length</label>
+                        <span class="settings-value" id="max-tokens-value">512</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" id="max-tokens" min="128" max="1024" step="128" value="512">
+                        <div class="slider-labels">
+                            <span>Shorter</span>
+                            <span>Longer</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="settings-toggle">
+                    <label class="toggle">
+                        <input type="checkbox" id="streaming" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <div class="toggle-label">
+                        <span>Enable Streaming</span>
+                        <span class="settings-hint">See responses as they're generated</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="nav-footer">
+                <button id="clear-cache" class="footer-button">
+                    <i class="fas fa-broom"></i>
+                    <span>Clear Cache</span>
+                </button>
+                
+                <div class="api-status">
+                    <div class="status-indicator connected">
+                        <span class="status-dot"></span>
+                        <span id="connection-status">Connected</span>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <header class="content-header">
+                <button class="menu-toggle" id="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                
+                <div class="conversation-title">
+                    <h2 id="current-conversation-title">New Conversation</h2>
+                    <span class="subtitle" id="conversation-date"></span>
+                </div>
+                
+                <div class="header-actions">
+                    <button class="action-button" id="toggle-references" title="View Legal References">
+                        <i class="fas fa-book-open"></i>
+                    </button>
+                    <button class="action-button" id="export-conversation" title="Export Conversation">
+                        <i class="fas fa-download"></i>
+                    </button>
+                    <button class="action-button" id="delete-conversation" title="Delete Conversation">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </header>
+
+            <div class="messages-container" id="messages-container">
+                <!-- Welcome Screen -->
+                <div class="welcome-screen">
+                    <div class="welcome-content">
+                        <div class="welcome-header">
+                            <div class="welcome-logo-container">
+                                <img src="logo.svg" alt="NyayaGPT Logo" class="welcome-logo">
+                            </div>
+                            <h1>Welcome to NyayaGPT</h1>
+                            <p>Your AI-powered legal research assistant</p>
+                        </div>
+                        
+                        <div class="welcome-features">
+                            <div class="feature-card">
+                                <div class="feature-icon"><i class="fas fa-balance-scale"></i></div>
+                                <div class="feature-text">
+                                    <h3>Legal Research</h3>
+                                    <p>Access Indian court judgments, statutes & precedents</p>
+                                </div>
+                            </div>
+                            
+                            <div class="feature-card">
+                                <div class="feature-icon"><i class="fas fa-file-alt"></i></div>
+                                <div class="feature-text">
+                                    <h3>Document Drafting</h3>
+                                    <p>Generate petitions, notices & legal documents</p>
+                                </div>
+                            </div>
+                            
+                            <div class="feature-card">
+                                <div class="feature-icon"><i class="fas fa-search"></i></div>
+                                <div class="feature-text">
+                                    <h3>Case Analysis</h3>
+                                    <p>Get insights from landmark cases & legal principles</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="examples-section">
+                            <h3>Try asking about:</h3>
+                            <div class="examples-grid">
+                                <button class="example-card">
+                                    <span class="example-icon"><i class="fas fa-gavel"></i></span>
+                                    <span class="example-text">Rights in case of illegal detention under Indian law</span>
+                                </button>
+                                
+                                <button class="example-card">
+                                    <span class="example-icon"><i class="fas fa-people-arrows"></i></span>
+                                    <span class="example-text">Draft a legal notice for property boundary dispute</span>
+                                </button>
+                                
+                                <button class="example-card">
+                                    <span class="example-icon"><i class="fas fa-landmark"></i></span>
+                                    <span class="example-text">Summarize recent Supreme Court judgment on privacy rights</span>
+                                </button>
+                                
+                                <button class="example-card">
+                                    <span class="example-icon"><i class="fas fa-file-contract"></i></span>
+                                    <span class="example-text">Procedure for filing anticipatory bail in Delhi High Court</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Chat Messages will be inserted here -->
+            </div>
+
+            <div class="input-section">
+                <form id="query-form" class="query-form">
+                    <div class="input-container">
+                        <textarea 
+                            id="query-input" 
+                            placeholder="Ask any legal question or request document drafting..." 
+                            rows="1"
+                            maxlength="2000"
+                        ></textarea>
+                        
+                        <div class="input-actions">
+                            <button type="submit" id="send-button" class="send-button" disabled>
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="input-footer">
+                        <div class="characters-counter">
+                            <span id="character-count">0</span>
+                            <span>/2000</span>
+                        </div>
+                        <div class="disclaimer">
+                            NyayaGPT provides information, not legal advice. Verify all information with qualified legal professionals.
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </main>
+
+        <!-- References Panel -->
+        <aside class="references-panel" id="references-panel">
+            <div class="panel-header">
+                <h3>Legal References</h3>
+                <button class="close-panel" id="close-references">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="panel-content" id="references-content">
+                <div class="empty-panel">
+                    <div class="empty-panel-icon">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <p>Legal references from your conversation will appear here</p>
+                </div>
+                
+                <!-- References will be populated here -->
+            </div>
+        </aside>
+    </div>
+
+    <!-- Loading overlay -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loader-container">
+            <svg class="loader-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="50" cy="50" r="45" fill="none" stroke="#e5e7eb" stroke-width="8" />
+                <path fill="none" stroke="#6d28d9" stroke-width="8" stroke-linecap="round"
+                    d="M50 5 
+                       a 45 45 0 0 1 0 90
+                       a 45 45 0 0 1 0 -90">
+                    <animateTransform
+                        attributeName="transform"
+                        type="rotate"
+                        from="0 50 50"
+                        to="360 50 50"
+                        dur="1s"
+                        repeatCount="indefinite" />
+                </path>
+            </svg>
+            <p class="loader-text">Processing your legal query...</p>
+        </div>
+    </div>
+
+    <!-- Notification container -->
+    <div class="notifications-container" id="notifications-container">
+        <!-- Notifications will be dynamically added here -->
+    </div>
+
+    <!-- Message Templates (for JavaScript use) -->
+    <template id="user-message-template">
+        <div class="message user-message">
+            <div class="message-content">
+                <div class="message-header">
+                    <span class="sender">You</span>
+                    <span class="timestamp">TIME</span>
+                </div>
+                <div class="message-body">
+                    MESSAGE_TEXT
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="assistant-message-template">
+        <div class="message assistant-message">
+            <div class="message-avatar">
+                <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="20" cy="20" r="20" fill="#6d28d9" />
+                    <path d="M13,16 L13,26 L11,26 L11,16 L13,16 Z M29,16 L29,26 L27,26 L27,16 L29,16 Z M25,14 L25,16 L15,16 L15,14 L25,14 Z M25,26 L25,28 L15,28 L15,26 L25,26 Z M25,20 L25,22 L15,22 L15,20 L25,20 Z" fill="white" />
+                </svg>
+            </div>
+            <div class="message-content">
+                <div class="message-header">
+                    <span class="sender">NyayaGPT</span>
+                    <span class="timestamp">TIME</span>
+                </div>
+                <div class="message-body">
+                    MESSAGE_TEXT
+                </div>
+                <div class="message-footer">
+                    <div class="references-button hidden">
+                        <button class="reference-toggle">
+                            <i class="fas fa-book-open"></i>
+                            <span>View Legal References</span>
+                        </button>
+                    </div>
+                    <div class="message-metadata">
+                        <span class="metadata-item"><i class="fas fa-microchip"></i> <span class="model-used">MODEL</span></span>
+                        <span class="metadata-item"><i class="fas fa-search"></i> <span class="strategy-used">STRATEGY</span></span>
+                        <span class="metadata-item"><i class="fas fa-clock"></i> <span class="processing-time">TIME</span>s</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="reference-item-template">
+        <div class="reference-item">
+            <div class="reference-header">
+                <h4 class="reference-title">TITLE</h4>
+                <a href="#" class="reference-link" target="_blank">View Source</a>
+            </div>
+            <div class="reference-snippet">
+                SNIPPET
+            </div>
+            <div class="reference-meta">
+                <span class="reference-type">TYPE</span>
+            </div>
+        </div>
+    </template>
+
+    <template id="notification-template">
+        <div class="notification">
+            <div class="notification-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="notification-content">
+                <div class="notification-title">TITLE</div>
+                <div class="notification-message">MESSAGE</div>
+            </div>
+            <button class="notification-close">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </template>
+
+    <script src="script.js"></script>
+</body>
+</html>
